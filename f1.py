@@ -15,7 +15,7 @@ xml_enable = """<Integrate version="2.0" xmlns="http://www.hikvision.com/ver20/X
 </Integrate>"""
 
 response = requests.put(url_enable, auth=HTTPDigestAuth(admin_user, admin_pass), data=xml_enable)
-print(f"تفعيل ONVIF: {response.status_code}")   
+print(f"ONVIF activated: {response.status_code}")   
 
 
 
@@ -26,7 +26,7 @@ url_add_user = f"http://{ip}/ISAPI/Security/ONVIF/users"
 # الهيكل ده هو اللي الكاميرا بتطلبه في الموديلات الجديدة
 xml_user = f"""<OnvifUser version="2.0" xmlns="http://www.hikvision.com/ver20/XMLSchema">
     <id>5</id>
-    <userName>onvif_admin_2</userName>
+    <userName>onvif_admin</userName>
     <password>Pass123456!</password>
     <userLevel>Administrator</userLevel>
 </OnvifUser>"""
@@ -38,10 +38,51 @@ response = requests.post(url_add_user,
                          headers=headers)
 
 if response.status_code in [200, 201]:
-    print("✅ تم تفعيل الـ ONVIF وإضافة المستخدم بنجاح!")
+    print("ONVIF user add successfully ✅!")
 else:
     print(f"❌ فشل الإضافة: {response.status_code}")
     print(response.text)
+
+
+
+
+def add_camera_user(new_username, new_password, role="Operator"):
+    url = f"http://{ip}/ISAPI/Security/users"
+    
+    # Hikvision User XML Schema
+    # ID '2' is typically the first available slot after the default admin
+    user_xml = f"""<User version="2.0" xmlns="http://www.isapi.org/ver20/XMLSchema">
+        <id>2</id>
+        <userName>{new_username}</userName>
+        <password>{new_password}</password>
+        <userLevel>{role}</userLevel>
+    </User>"""
+
+    headers = {'Content-Type': 'application/xml'}
+
+    try:
+        response = requests.post(
+            url, 
+            auth=HTTPDigestAuth(admin_user, admin_pass), 
+            data=user_xml, 
+            headers=headers,
+            timeout=10
+        )
+        
+        if response.status_code == 200 or response.status_code == 201:
+            print(f"User '{new_username}' created successfully.")
+        else:
+            print(f"Failed. Status: {response.status_code}")
+            print(f"Response: {response.text}")
+            
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+# Execute
+add_camera_user("AAA2", "poiiop!@#", "Operator")
+
+
+
 
 
 
