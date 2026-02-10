@@ -1,0 +1,62 @@
+---
+- name: Configure Hikvision NVR IP Channels
+  hosts: localhost
+  connection: local
+  vars:
+    nvr_ip: "10.175.0.203"
+    nvr_user: "admin"
+    nvr_pass: "HQ@netcam!@#"
+    channel_id: "21"
+    
+    # Camera to be added
+    cam_ip: "10.175.0.105"
+    cam_user: "admin"
+    cam_pass: "IT@cam!@#"
+
+  tasks:
+    - name: Discover current XML structure
+      ansible.builtin.uri:
+        url: "http://10.175.0.203/ISAPI/ContentMgmt/InputProxy/channels/21"
+        method: GET
+        user: "admin"
+        password: "HQ@netcam!@#"
+        force_basic_auth: no
+        return_content: yes
+      register: nvr_template
+
+    - name: Show the XML template
+      ansible.builtin.debug:
+        msg: "{{ nvr_template.content }}"
+
+
+    - name: Add IP Camera to NVR Channel {{ channel_id }}
+      ansible.builtin.uri:
+        url: "http://{{ nvr_ip }}/ISAPI/ContentMgmt/InputProxy/channels/{{ channel_id }}"
+        method: PUT
+        user: "{{ nvr_user }}"
+        password: "{{ nvr_pass }}"
+        force_basic_auth: no
+        url_username: "{{ nvr_user }}"
+        url_password: "{{ nvr_pass }}"
+        # Hikvision uses Digest Auth
+        headers:
+          Content-Type: "application/xml"
+        body: |
+          <?xml version="1.0" encoding="UTF-8"?>
+          <InputProxyChannel version="2.0" xmlns="http://www.isapi.org/ver20/XMLSchema">
+            <id>{{ channel_id }}</id>
+            <sourceInputPortDescriptor>
+              <proxyProtocol>HIKVISION</proxyProtocol>
+              <addressingFormatType>ipaddress</addressingFormatType>
+              <ipAddress>{{ cam_ip }}</ipAddress>
+              <managePortNo>8000</managePortNo>
+              <userName>{{ cam_user }}</userName>
+              <password>{{ cam_pass }}</password>
+            </sourceInputPortDescriptor>
+          </InputProxyChannel>
+        status_code: [200, 201]
+      register: response
+
+    - name: Print Response
+      ansible.builtin.debug:
+        var: response.content
