@@ -10,7 +10,7 @@ nvr_pass = "HQ@netcam!@#"
 camera_ip = "10.175.0.105"
 camera_user = "admin"
 camera_pass = "IT@cam!@#"
-channel_id = 21   # Channel number on NVR
+channel_id = 22   # Channel number on NVR
 
 url = f"http://{nvr_ip}/ISAPI/ContentMgmt/InputProxy/channels/{channel_id}"
 

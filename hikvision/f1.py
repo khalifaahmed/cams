@@ -2,23 +2,22 @@ import requests
 from requests.auth import HTTPDigestAuth
 import time
 
-# --- الإعدادات العامة ---
-# قائمة الكاميرات (يمكنك إضافة الـ 50 كاميرا هنا)
+
 camera_ips = [
     "10.175.0.133",
     "10.175.0.105",
     "10.175.0.62",
-    # ... أضف الباقي هنا
+    
 ]
 
 admin_user = "admin"
-admin_pass = "IT@cam!@#" # الباسورد الموحد للأدمن على الكاميرات
+admin_pass = "IT@cam!@#" 
 
-# بيانات مستخدم ONVIF المراد إضافته
+
 onvif_username = "onvif_admin"
 onvif_password = "Pass123456!"
 
-# بيانات مستخدم الـ ISAPI العادي
+
 new_web_user = "AAA2"
 new_web_pass = "poiiop!@#"
 
@@ -36,7 +35,6 @@ def process_camera(ip):
         res = requests.put(url_enable, auth=HTTPDigestAuth(admin_user, admin_pass), data=xml_enable, timeout=5)
         print(f"[*] ONVIF Activation Status: {res.status_code}")
 
-        # 2. إضافة مستخدم ONVIF
         url_onvif = f"http://{ip}/ISAPI/Security/ONVIF/users"
         xml_onvif = f"""<OnvifUser version="2.0" xmlns="http://www.hikvision.com/ver20/XMLSchema">
             <id>5</id>
@@ -83,7 +81,7 @@ if __name__ == "__main__":
 
 
 
-
+#========================================================================================================================
 
 
 
@@ -234,19 +232,18 @@ if __name__ == "__main__":
 
 
 
-# import requests
-# from requests.auth import HTTPDigestAuth
+import requests
+from requests.auth import HTTPDigestAuth
 
-# بيانات الكاميرا
-# ip_address = "10.175.0.62"
-# username = "admin"
-# password = "IT@cam!@#"
 
-# المسار الخاص بمعلومات الجهاز في بروتوكول ISAPI
+ip_address = "10.175.0.62"
+username = "admin"
+password = "IT@cam!@#"
+
+
 url = f"http://{ip}/ISAPI/System/deviceInfo"
 
 try:
-    # إرسال الطلب باستخدام Digest Authentication (النظام اللي بتستخدمه هيكفيشن)
     response = requests.get(url, auth=HTTPDigestAuth(admin_user, admin_pass), timeout=5)
     
     if response.status_code == 200:

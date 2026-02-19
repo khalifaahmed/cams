@@ -1,0 +1,14 @@
+<InputProxyChannel version="2.0" xmlns="http://www.isapi.org/ver20/XMLSchema">
+    <id>21</id>
+    <name>Cameradfdf</name>
+    <sourceInputPortDescriptor>
+        <proxyProtocol>HIKVISION</proxyProtocol>
+        <addressingFormatType>ipaddress</addressingFormatType>
+        <ipAddress>10.175.0.133</ipAddress>
+        <managePortNo>8000</managePortNo>
+        <srcInputPort>1</srcInputPort>
+        <userName>admin</userName>
+        <password>IT@cam!@#</password>
+        <streamType>auto</streamType>
+    </sourceInputPortDescriptor>
+</InputProxyChannel>

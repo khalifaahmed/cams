@@ -1,0 +1,37 @@
+---
+- name: Add New Cameras to Empty Channels
+  hosts: nvrs
+  connection: local
+  gather_facts: no
+  vars:
+    nvr_user: "admin"
+    nvr_pass: "HQ@netcam!@#"
+  
+    new_cameras:
+      - { id: 21, name: "Gate_In", ip: "10.175.0.13", pass: "IT@cam!@#" }
+      - { id: 22, name: "Gate_Out", ip: "10.175.0.71", pass: "IT@cam!@#" }
+      - { id: 22, name: "Gate_Out", ip: "10.175.0.68", pass: "IT@cam!@#" }
+
+
+  tasks:
+    - name: Activate and Configure Empty IP Channels
+      uri:
+        url: "http://{{ ansible_host }}/ISAPI/ContentMgmt/InputProxy/channels/{{ item.id }}"
+        method: PUT
+        url_username: "{{ nvr_user }}"
+        url_password: "{{ nvr_pass }}"
+        force_basic_auth: no
+        return_content: yes
+        headers:
+          Content-Type: "application/xml"
+        # الـ XML ده هيعمل Overwrite لو القناة فيها داتا، وهيعمل Add لو القناة فاضية
+        body: "<InputProxyChannel version=\"2.0\" xmlns=\"http://www.isapi.org/ver20/XMLSchema\"><id>{{ item.id }}</id><name>{{ item.name }}</name><sourceInputPortDescriptor><proxyProtocol>HIKVISION</proxyProtocol><addressingFormatType>ipaddress</addressingFormatType><ipAddress>{{ item.ip }}</ipAddress><managePortNo>8000</managePortNo><srcInputPort>1</srcInputPort><userName>admin</userName><password>{{ item.pass }}</password><streamType>auto</streamType></sourceInputPortDescriptor></InputProxyChannel>"
+        status_code: 200, 201
+      loop: "{{ new_cameras }}"
+      register: result
+
+    - name: Show Result for each camera
+      debug:
+        msg: "Channel {{ item.item.id }} is now active and configured."
+      loop: "{{ result.results }}"
+      
