@@ -5,7 +5,6 @@ import re
 import csv
 from concurrent.futures import ThreadPoolExecutor
 
-# --- CONFIGURATION ---
 subnet_prefix = "10.175.57"
 admin_user = "admin"
 admin_pass = "IT@cam!@#"
@@ -16,25 +15,18 @@ def scan_dahua_camera(ip):
     timeout = 2
     
     try:
-        # 1. Get System Info (for Serial Number)
-        # Dahua path: magicBox.cgi?action=getSystemInfo
         info_url = f"http://{ip}/cgi-bin/magicBox.cgi?action=getSystemInfo"
         r_info = requests.get(info_url, auth=auth, timeout=timeout)
         
         if r_info.status_code == 200:
-            # Extract Serial using Regex
-            # Typical response: serialNumber=1D02845PAZXXXXX
             s_match = re.search(r'serialNumber=(.*)', r_info.text)
             serial = s_match.group(1).strip() if s_match else "Unknown"
             
-            # 2. Get Network Config (for MAC Address)
-            # Dahua path: configManager.cgi?action=getConfig&name=Network
             net_url = f"http://{ip}/cgi-bin/configManager.cgi?action=getConfig&name=Network"
             r_net = requests.get(net_url, auth=auth, timeout=timeout)
             
             mac = "Not Found"
             if r_net.status_code == 200:
-                # Typical response: table.Network.eth0.PhysicalAddress=bc:32:d5:xx:xx:xx
                 m_match = re.search(r'PhysicalAddress=(.*)', r_net.text)
                 if m_match:
                     mac = m_match.group(1).strip().upper()
@@ -44,7 +36,6 @@ def scan_dahua_camera(ip):
         pass
     return None
 
-# --- EXECUTION ---
 print(f"Scanning Dahua Subnet {subnet_prefix}.1 to .255...")
 print(f"{'IP Address':<15} | {'MAC Address':<18} | {'Serial Number'}")
 print("-" * 80)

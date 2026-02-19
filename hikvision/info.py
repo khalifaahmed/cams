@@ -662,7 +662,6 @@ import re
 import csv
 from concurrent.futures import ThreadPoolExecutor
 
-# --- CONFIGURATION ---
 subnet_prefix = "10.175.57"
 admin_user = "admin"
 admin_pass = "IT@cam!@#"
@@ -673,17 +672,14 @@ def scan_camera(ip):
     timeout = 2
     
     try:
-        # 1. Get Serial Number
         info_url = f"http://{ip}/ISAPI/System/deviceInfo"
         r_info = requests.get(info_url, auth=auth, timeout=timeout)
         
         if r_info.status_code == 200:
-            # Extract Serial
             root_info = ET.fromstring(r_info.content)
             serial_tag = root_info.find(".//{*}serialNumber")
             serial = serial_tag.text if serial_tag is not None else "Unknown"
             
-            # 2. Get MAC Address (Universal Hunt)
             mac = "Not Found"
             net_url = f"http://{ip}/ISAPI/System/Network/interfaces/1"
             r_net = requests.get(net_url, auth=auth, timeout=timeout)
@@ -695,19 +691,16 @@ def scan_camera(ip):
                 if mac_tag is not None:
                     mac = mac_tag.text
                 else:
-                    # Regex fallback for tricky models
                     mac_pattern = r'([0-9a-fA-F]{2}[:][0-9a-fA-F]{2}[:][0-9a-fA-F]{2}[:][0-9a-fA-F]{2}[:][0-9a-fA-F]{2}[:][0-9a-fA-F]{2})'
                     match = re.search(mac_pattern, r_net.text)
                     if match:
                         mac = match.group(1)
 
-            # Return as a dictionary
             return {"IP Address": ip, "MAC Address": mac, "Serial Number": serial}
     except:
         pass
     return None
 
-# --- EXECUTION ---
 print(f"Scanning {subnet_prefix}.1 to .255...")
 print(f"{'IP Address':<15} | {'MAC Address':<18} | {'Serial Number'}")
 print("-" * 80)
@@ -720,10 +713,8 @@ with ThreadPoolExecutor(max_workers=30) as executor:
     for res in results:
         if res:
             found_cameras.append(res)
-            # THIS LINE NOW PRINTS EVERYTHING TO THE TERMINAL
             print(f"{res['IP Address']:<15} | {res['MAC Address']:<18} | {res['Serial Number']}")
 
-# Write to CSV
 if found_cameras:
     keys = found_cameras[0].keys()
     with open(output_file, 'w', newline='') as f:
