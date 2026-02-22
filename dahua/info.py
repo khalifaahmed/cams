@@ -5,10 +5,10 @@ import re
 import csv
 from concurrent.futures import ThreadPoolExecutor
 
-subnet_prefix = "10.175.57"
+subnet_prefix = "10.175.58"
 admin_user = "admin"
 admin_pass = "IT@cam!@#"
-output_file = "dahua_camera_results.csv"
+output_file = "Cameras_Dahua.csv"
 
 def scan_dahua_camera(ip):
     auth = HTTPDigestAuth(admin_user, admin_pass)
