@@ -575,86 +575,6 @@
 #================================================================================================================================================================
 #create csv file for the results
 
-# import requests
-# from requests.auth import HTTPDigestAuth
-# import xml.etree.ElementTree as ET
-# import re
-# import csv
-# from concurrent.futures import ThreadPoolExecutor
-
-# # --- CONFIGURATION ---
-# subnet_prefix = "10.175.0"
-# admin_user = "admin"
-# admin_pass = "IT@cam!@#"
-# output_file = "camera_results.csv"
-
-# def scan_camera(ip):
-#     auth = HTTPDigestAuth(admin_user, admin_pass)
-#     timeout = 2
-    
-#     try:
-#         # 1. Get Serial Number
-#         info_url = f"http://{ip}/ISAPI/System/deviceInfo"
-#         r_info = requests.get(info_url, auth=auth, timeout=timeout)
-        
-#         if r_info.status_code == 200:
-#             # Extract Serial
-#             root_info = ET.fromstring(r_info.content)
-#             serial_tag = root_info.find(".//{*}serialNumber")
-#             serial = serial_tag.text if serial_tag is not None else "Unknown"
-            
-#             # 2. Get MAC Address (Universal Hunt)
-#             mac = "Not Found"
-#             net_url = f"http://{ip}/ISAPI/System/Network/interfaces/1"
-#             r_net = requests.get(net_url, auth=auth, timeout=timeout)
-            
-#             if r_net.status_code == 200:
-#                 root_net = ET.fromstring(r_net.content)
-#                 mac_tag = root_net.find(".//{*}macAddress") or root_net.find(".//{*}physicalAddress")
-                
-#                 if mac_tag is not None:
-#                     mac = mac_tag.text
-#                 else:
-#                     # Regex fallback for tricky models
-#                     mac_pattern = r'([0-9a-fA-F]{2}[:][0-9a-fA-F]{2}[:][0-9a-fA-F]{2}[:][0-9a-fA-F]{2}[:][0-9a-fA-F]{2}[:][0-9a-fA-F]{2})'
-#                     match = re.search(mac_pattern, r_net.text)
-#                     if match:
-#                         mac = match.group(1)
-
-#             # Return as a dictionary for the CSV writer
-#             return {"IP Address": ip, "MAC Address": mac, "Serial Number": serial}
-#     except:
-#         pass
-#     return None
-
-# # --- EXECUTION ---
-# print(f"Scanning {subnet_prefix}.1 to .255...")
-# ips = [f"{subnet_prefix}.{i}" for i in range(1, 256)]
-# found_cameras = []
-
-# # Use 30 threads for speed
-# with ThreadPoolExecutor(max_workers=30) as executor:
-#     results = executor.map(scan_camera, ips)
-#     for res in results:
-#         if res:
-#             found_cameras.append(res)
-#             print(f"Found: {res['IP Address']} | {res['MAC Address']}")
-
-# # Write to CSV
-# if found_cameras:
-#     keys = found_cameras[0].keys()
-#     with open(output_file, 'w', newline='') as f:
-#         dict_writer = csv.DictWriter(f, fieldnames=keys)
-#         dict_writer.writeheader()
-#         dict_writer.writerows(found_cameras)
-#     print(f"\nSuccess! {len(found_cameras)} cameras saved to {output_file}")
-# else:
-#     print("\nNo cameras found.")
-
-
-#============================================================================================================================================\
-
-
 import requests
 from requests.auth import HTTPDigestAuth
 import xml.etree.ElementTree as ET
@@ -662,24 +582,28 @@ import re
 import csv
 from concurrent.futures import ThreadPoolExecutor
 
-subnet_prefix = "10.175.58"
+# --- CONFIGURATION ---
+subnet_prefix = "10.175.0"
 admin_user = "admin"
 admin_pass = "IT@cam!@#"
-output_file = "Cameras_Hikvisio.csv"
+output_file = "camera_results.csv"
 
 def scan_camera(ip):
     auth = HTTPDigestAuth(admin_user, admin_pass)
     timeout = 2
     
     try:
+        # 1. Get Serial Number
         info_url = f"http://{ip}/ISAPI/System/deviceInfo"
         r_info = requests.get(info_url, auth=auth, timeout=timeout)
         
         if r_info.status_code == 200:
+            # Extract Serial
             root_info = ET.fromstring(r_info.content)
             serial_tag = root_info.find(".//{*}serialNumber")
             serial = serial_tag.text if serial_tag is not None else "Unknown"
             
+            # 2. Get MAC Address (Universal Hunt)
             mac = "Not Found"
             net_url = f"http://{ip}/ISAPI/System/Network/interfaces/1"
             r_net = requests.get(net_url, auth=auth, timeout=timeout)
@@ -691,39 +615,115 @@ def scan_camera(ip):
                 if mac_tag is not None:
                     mac = mac_tag.text
                 else:
+                    # Regex fallback for tricky models
                     mac_pattern = r'([0-9a-fA-F]{2}[:][0-9a-fA-F]{2}[:][0-9a-fA-F]{2}[:][0-9a-fA-F]{2}[:][0-9a-fA-F]{2}[:][0-9a-fA-F]{2})'
                     match = re.search(mac_pattern, r_net.text)
                     if match:
                         mac = match.group(1)
 
+            # Return as a dictionary for the CSV writer
             return {"IP Address": ip, "MAC Address": mac, "Serial Number": serial}
     except:
         pass
     return None
 
+# --- EXECUTION ---
 print(f"Scanning {subnet_prefix}.1 to .255...")
-print(f"{'IP Address':<15} | {'MAC Address':<18} | {'Serial Number'}")
-print("-" * 80)
-
 ips = [f"{subnet_prefix}.{i}" for i in range(1, 256)]
 found_cameras = []
 
+# Use 30 threads for speed
 with ThreadPoolExecutor(max_workers=30) as executor:
     results = executor.map(scan_camera, ips)
     for res in results:
         if res:
             found_cameras.append(res)
-            print(f"{res['IP Address']:<15} | {res['MAC Address']:<18} | {res['Serial Number']}")
+            print(f"Found: {res['IP Address']} | {res['MAC Address']}")
 
+# Write to CSV
 if found_cameras:
     keys = found_cameras[0].keys()
     with open(output_file, 'w', newline='') as f:
         dict_writer = csv.DictWriter(f, fieldnames=keys)
         dict_writer.writeheader()
         dict_writer.writerows(found_cameras)
-    print("-" * 80)
-    print(f"Success! {len(found_cameras)} cameras saved to {output_file}")
+    print(f"\nSuccess! {len(found_cameras)} cameras saved to {output_file}")
 else:
     print("\nNo cameras found.")
+
+
+#============================================================================================================================================\
+# save output into screen and file
+
+# import requests
+# from requests.auth import HTTPDigestAuth
+# import xml.etree.ElementTree as ET
+# import re
+# import csv
+# from concurrent.futures import ThreadPoolExecutor
+
+# subnet_prefix = "10.175.0"
+# admin_user = "admin"
+# admin_pass = "IT@cam!@#"
+# output_file = "Cameras_Hikvisio.csv"
+
+# def scan_camera(ip):
+#     auth = HTTPDigestAuth(admin_user, admin_pass)
+#     timeout = 2
+    
+#     try:
+#         info_url = f"http://{ip}/ISAPI/System/deviceInfo"
+#         r_info = requests.get(info_url, auth=auth, timeout=timeout)
+        
+#         if r_info.status_code == 200:
+#             root_info = ET.fromstring(r_info.content)
+#             serial_tag = root_info.find(".//{*}serialNumber")
+#             serial = serial_tag.text if serial_tag is not None else "Unknown"
+            
+#             mac = "Not Found"
+#             net_url = f"http://{ip}/ISAPI/System/Network/interfaces/1"
+#             r_net = requests.get(net_url, auth=auth, timeout=timeout)
+            
+#             if r_net.status_code == 200:
+#                 root_net = ET.fromstring(r_net.content)
+#                 mac_tag = root_net.find(".//{*}macAddress") or root_net.find(".//{*}physicalAddress")
+                
+#                 if mac_tag is not None:
+#                     mac = mac_tag.text
+#                 else:
+#                     mac_pattern = r'([0-9a-fA-F]{2}[:][0-9a-fA-F]{2}[:][0-9a-fA-F]{2}[:][0-9a-fA-F]{2}[:][0-9a-fA-F]{2}[:][0-9a-fA-F]{2})'
+#                     match = re.search(mac_pattern, r_net.text)
+#                     if match:
+#                         mac = match.group(1)
+
+#             return {"IP Address": ip, "MAC Address": mac, "Serial Number": serial}
+#     except:
+#         pass
+#     return None
+
+# print(f"Scanning {subnet_prefix}.1 to .255...")
+# print(f"{'IP Address':<15} | {'MAC Address':<18} | {'Serial Number'}")
+# print("-" * 80)
+
+# ips = [f"{subnet_prefix}.{i}" for i in range(1, 256)]
+# found_cameras = []
+
+# with ThreadPoolExecutor(max_workers=30) as executor:
+#     results = executor.map(scan_camera, ips)
+#     for res in results:
+#         if res:
+#             found_cameras.append(res)
+#             print(f"{res['IP Address']:<15} | {res['MAC Address']:<18} | {res['Serial Number']}")
+
+# if found_cameras:
+#     keys = found_cameras[0].keys()
+#     with open(output_file, 'w', newline='') as f:
+#         dict_writer = csv.DictWriter(f, fieldnames=keys)
+#         dict_writer.writeheader()
+#         dict_writer.writerows(found_cameras)
+#     print("-" * 80)
+#     print(f"Success! {len(found_cameras)} cameras saved to {output_file}")
+# else:
+#     print("\nNo cameras found.")
 
 
